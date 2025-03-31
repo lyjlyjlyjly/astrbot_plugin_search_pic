@@ -1,12 +1,17 @@
 # astrbot_plugin_search_pic
-astrbot插件  
-从 https://saucenao.com/ 搜索图片，功能是以图搜图  
-目前仅支持 aiocqhttp 平台
+
+---
+
+## 简介:
+astrbot插件，目前仅支持 aiocqhttp 平台  
+从 https://saucenao.com/ 搜索图片，功能是以图搜图
 
 作者: lyjlyjlyjly  
 版本: v1.0.0
 
-指令列表（如果是在群聊消息，需要在前面加上astrbot的唤醒前缀）：
+---
+
+## 指令列表：
 - 搜图  
     别名 “soutu”
     发出消息后在 30s 内发送图片进行搜图  
@@ -18,7 +23,11 @@ astrbot插件
 - 搜图帮助  
     获取帮助信息
 
-搜索范围如下：
+如果是在群聊消息，需要在前面加上astrbot的唤醒前缀
+
+---
+
+## 搜索范围如下：
 1. H-Magazines
 2. H-Game CG
 3. DoujinshiDB
@@ -57,3 +66,11 @@ astrbot插件
 36. Furry Network
 37. Kemono
 38. Skeb
+
+---
+
+## 提醒
+
+这个网站可能会出现有搜索结果但是没有图片的情况，有时候甚至只有相似度没有搜索结果，如下图：
+![img.png](img.png)
+没有图片src，没有搜索结果，输出就没有东西，这不是程序的问题

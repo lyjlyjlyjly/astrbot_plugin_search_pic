@@ -1,24 +1,15 @@
-import random
 import asyncio
 import os
-import json
-import datetime
 import urllib
 import urllib.error
 import urllib.request
 import urllib.parse
 import mimetypes
 from lxml import html
-import aiohttp
-import ssl
-from PIL import Image as PILImage
-from PIL import ImageDraw as PILImageDraw
-from PIL import ImageFont as PILImageFont
-from astrbot.api.all import AstrMessageEvent, CommandResult, Context, Image, Plain, Node, Nodes
+from astrbot.api.all import AstrMessageEvent, Context, Image, Plain, Node
 import astrbot.api.event.filter as filter
 from astrbot.api.star import register, Star
-from astrbot.core.utils.io import save_temp_img
-
+from lxml import etree
 
 @register(
     "astrbot_plugin_search_pic",
@@ -79,21 +70,23 @@ class Main(Star):
         """
 
     async def get_pic_info(self, tree) -> list:
-        img = tree.xpath(r'./td[@class="resulttableimage"]//img')[0]
-        img_src_tag = ['data-src2', 'data-src', 'src']
-        # img_src_tag[:2] = img_src_tag[1::-1]
+        result_image_src = None
+        img = tree.xpath(r'.//img')
+        if len(img) > 0:
+            img = img[0]
+            img_src_tag = ['data-src2', 'data-src', 'src']
+            # img_src_tag[:2] = img_src_tag[1::-1]
 
-        # R18图标清图地址在 data-src2, 缩略图在 data-src, src会根据网页情况选择 data-src 还是 data-src2
-        # 非R18图地址在src
-        # 另外当相似度过低时，平台会将src指向一个极小的.gif，以制造隐藏的效果，不是有效url格式
-        # 以上规律有较小可能出现意外
-        # 如果想要R18返回缩略图，可以给 data-src2 和 data-src 换位置
+            # R18图标清图地址在 data-src2, 缩略图在 data-src, src会根据网页情况选择 data-src 还是 data-src2
+            # 非R18图地址在src
+            # 另外当相似度过低时，平台会将src指向一个极小的.gif，以制造隐藏的效果，不是有效url格式
+            # 以上规律有较小可能出现意外
+            # 如果想要R18返回缩略图，可以给 data-src2 和 data-src 换位置
 
-        result_image_src = ""
-        for tag in img_src_tag:
-            if img.get(tag):
-                result_image_src = img.get(tag)
-                break
+            for tag in img_src_tag:
+                if img.get(tag):
+                    result_image_src = img.get(tag)
+                    break
 
         result_similarity_info = tree.xpath(
             r'./td[@class="resulttablecontent"]/div[@class="resultmatchinfo"]/div[@class="resultsimilarityinfo"]/text()')[0]
@@ -184,11 +177,15 @@ class Main(Star):
                 raise ValueError("未获取到有效的HTML内容")
             tree = html.fromstring(html_text)
             # 一个resulttable就是一条查找记录
-            result_table_xpath = r'//div[@id="middle"]/div/table[@class="resulttable"]'
+            result_table_xpath = r'//div[@id="middle"]//table[@class="resulttable"]'
+            elements = tree.xpath(result_table_xpath)
+            if len(elements) == 0:
+                yield message.plain_result("未找到搜索结果")
+                return
 
             content = []
-            for ele in tree.xpath(result_table_xpath)[:3]:  # 枚举前三个记录
-                src, text = await self.get_pic_info(ele.xpath(r"./tr[1]")[0])
+            for ele in elements[:min(3, len(elements))]:  # 枚举前三个记录
+                src, text = await self.get_pic_info(ele.xpath(r".//tr[1]")[0])
 
                 def check_src_exists(_src):
                     try:
@@ -200,6 +197,9 @@ class Main(Star):
                     except urllib.error.URLError:
                         return None
 
+                if src is None:
+                    content.extend([Plain(text), Plain("\n"), Plain(f"该图片src不存在"), Plain("\n\n")])
+                    continue
                 exit_code = check_src_exists(src)
                 if exit_code == 200:
                     content.extend([Plain(text), Plain("\n"), Image.fromURL(src), Plain("\n\n")])
