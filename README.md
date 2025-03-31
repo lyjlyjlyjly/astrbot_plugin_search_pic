@@ -1,9 +1,59 @@
-# helloworld
+# astrbot_plugin_search_pic
+astrbot插件  
+从 https://saucenao.com/ 搜索图片，功能是以图搜图  
+目前仅支持 aiocqhttp 平台
 
-AstrBot 插件模板
+作者: lyjlyjlyjly  
+版本: v1.0.0
 
-A template plugin for AstrBot plugin feature
+指令列表（如果是在群聊消息，需要在前面加上astrbot的唤醒前缀）：
+- 搜图  
+    别名 “soutu”
+    发出消息后在 30s 内发送图片进行搜图  
+    搜索结果仅供参考，有概率出现网站上存在但是搜不到的问题  
+    由于QQ有审查机制，R18的图在群里可能发不出来，所以搜R18建议私聊  
+    图片不要旋转  
+- 搜图来源  
+    查询搜索范围
+- 搜图帮助  
+    获取帮助信息
 
-# 支持
-
-[帮助文档](https://astrbot.app)
+搜索范围如下：
+1. H-Magazines
+2. H-Game CG
+3. DoujinshiDB
+4. pixiv Images
+5. Nico Nico Seiga
+6. Danbooru
+7. drawr Images
+8. Nijie Images
+9. Yande.re
+10. Shutterstock
+11. FAKKU
+12. H-Misc (nH)
+13. 2D-Market
+14. MediBang
+15. Anime
+16. H-Anime
+17. Movies
+18. Shows
+19. Gelbooru
+20. Konachan
+21. Sankaku Channel
+22. Anime-Pictures.net
+23. e621.net
+24. Idol Complex
+25. bcy.net Illust
+26. bcy.net Cosplay
+27. PortalGraphics.net
+28. deviantArt
+29. Pawoo.net
+30. Madokami (Manga)
+31. MangaDex
+32. H-Misc (eH)
+33. ArtStation
+34. FurAffinity
+35. Twitter
+36. Furry Network
+37. Kemono
+38. Skeb
