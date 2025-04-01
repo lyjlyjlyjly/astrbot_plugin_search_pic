@@ -15,7 +15,7 @@ import aiohttp
     "astrbot_plugin_search_pic",
     "lyjlyjlyjly",
     r"从 https://saucenao.com/ 搜索图片",
-    "v1.1.0",
+    "v1.1.1",
     "https://github.com/lyjlyjlyjly/astrbot_plugin_search_pic"
 )
 class Main(Star):
@@ -23,7 +23,6 @@ class Main(Star):
         super().__init__(context)
         self.headers = {
             'User-Agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
-            'cookie': r'cf_clearance=y2kbPKKv9x3DXTEwSteVqPVQ8e27ZFFPPm9RNojjoMY-1743054836-1.2.1.1-hU2rrvp14Y2pKC6CPQlozZy52JKkapg4.9o6fURpHqPODjFBAVzoJq5KwEeli2fblV_ZJsP7I2rs7brczC0nXkFXxoMuSNddlx_kvXNt0n_BR2fx7pQ1KeEu6lBXZIA.nGNPxwCd6jjQJWZjAnzwrWBPV0dCeybKMD9vKUAgzXx6YcV9rSM86DqrCkJBh10TsUL2l8BQ1TUjN.W.jAlIHMvF_HK1cj4liGcA7mCHdmDt53RGDCLDw4h1OSVCRuvbSY3gAacsL59uqAcTSWpmrnDBXM0qCGfH25AtTogDE3cFOU9DaZMDBbzivWhs5CW0qyfmT306LeaK77eG2.qDQTYgxkDCJ1EfJWxJ3XwJSEpJaocsyWHtIcqkkB3jtVOArgeWrD5JqyCnlgq._M1jalgJShfidvUU53Vwo.4AFf0; user=147390; auth=d5e61417a0c0e0202cc1cfa9137d2a767b6fd54d; _gat_gtag_UA_412819_5=1; __utma=4212273.167531699.1743002465.1743054955.1743054955.1; __utmc=4212273; __utmz=4212273.1743054955.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmt=1; __utmb=4212273.1.10.1743054955; _ga_LK5LRE77R3=GS1.1.1743053390.6.1.1743054964.0.0.0; _ga=GA1.2.167531699.1743002465',
         }
         self.upload_url = r'https://saucenao.com/search.php'
         self.source_db = r"""从 https://saucenao.com/ 搜索图片，功能是以图搜图
@@ -191,8 +190,7 @@ class Main(Star):
                     content.extend([Plain(text), Plain("\n"), Plain(f"该图片资源不存在，状态码: {exit_code}"), Plain("\n\n")])
 
             yield message.chain_result([Node(
-                uin=3824609399,
-                name="1145141919810",
+                uin=message.get_self_id(),
                 content=content
             )])
         except Exception as e:
@@ -204,8 +202,7 @@ class Main(Star):
         # 发送纯文本就用上面的，发送转发消息就用下面的
         # yield message.plain_result(text)
         yield message.chain_result([Node(
-            uin=3824609399,
-            name="1145141919810",
+            uin=message.get_self_id(),
             content=[
                 Plain(text)
             ]
@@ -234,8 +231,7 @@ class Main(Star):
 """
         # yield message.plain_result(help_text)
         yield message.chain_result([Node(
-            uin=3824609399,
-            name="1145141919810",
+            uin=message.get_self_id(),
             content=[
                 Plain(help_text)
             ]
