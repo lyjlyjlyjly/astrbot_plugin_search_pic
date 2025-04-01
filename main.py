@@ -1,21 +1,21 @@
 import asyncio
 import os
-import urllib
-import urllib.error
-import urllib.request
-import urllib.parse
+# import urllib
+# import urllib.error
+# import urllib.request
+# import urllib.parse
 import mimetypes
 from lxml import html
 from astrbot.api.all import AstrMessageEvent, Context, Image, Plain, Node
 import astrbot.api.event.filter as filter
 from astrbot.api.star import register, Star
-from lxml import etree
+import aiohttp
 
 @register(
     "astrbot_plugin_search_pic",
     "lyjlyjlyjly",
     r"从 https://saucenao.com/ 搜索图片",
-    "v1.0.0",
+    "v1.1.0",
     "https://github.com/lyjlyjlyjly/astrbot_plugin_search_pic"
 )
 class Main(Star):
@@ -69,7 +69,7 @@ class Main(Star):
 38. Skeb
         """
 
-    async def get_pic_info(self, tree) -> list:
+    async def get_table_info(self, tree) -> list:
         result_image_src = None
         img = tree.xpath(r'.//img')
         if len(img) > 0:
@@ -105,8 +105,7 @@ class Main(Star):
                 i += 1
         return [result_image_src, "\n".join(grouped_text)]
 
-    async def upload_image_and_search(self, img_obj: Image, url: str):
-        # 将qq图片下载到本地
+    async def upload_image_and_search(self, img_obj, url):
         max_retries = 3
         retries = 0
         file_path = None
@@ -128,31 +127,18 @@ class Main(Star):
         retries = 0
         while retries < max_retries:
             try:
-                with open(file_path, 'rb') as file:
-                    file_content = file.read()
+                async with aiohttp.ClientSession() as session:
+                    file_name = os.path.basename(file_path)
+                    content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+                    with open(file_path, 'rb') as file:
+                        file_content = file.read()
+                    data = aiohttp.FormData()
+                    data.add_field('file', file_content, filename=file_name, content_type=content_type)
 
-                # multipart/form-data格式
-                boundary = '---------------------------1234567890'
-                content_type = f'multipart/form-data; boundary={boundary}'
-                data_parts = [
-                    f'--{boundary}',
-                    f'Content-Disposition: form-data; name="file"; filename="{os.path.basename(file_path)}"',
-                    f'Content-Type: {mimetypes.guess_type(file_path)[0] or "application/octet-stream"}',
-                    '',
-                    file_content.decode('latin1'),
-                    f'--{boundary}--'
-                ]
-                data = '\r\n'.join(data_parts).encode('latin1')
-
-                # 创建请求
-                req = urllib.request.Request(url, data=data, headers=self.headers)
-                req.add_header('Content-Type', content_type)
-                req.add_header('Content-Length', str(len(data)))
-
-                with urllib.request.urlopen(req) as response:
-                    response_content = response.read().decode('utf-8')
-                    return response_content
-            except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                    async with session.post(url, data=data, headers=self.headers) as response:
+                        response_content = await response.text()
+                        return response_content
+            except aiohttp.ClientError as e:
                 retries += 1
                 if retries == max_retries:
                     raise e
@@ -185,22 +171,20 @@ class Main(Star):
 
             content = []
             for ele in elements[:min(3, len(elements))]:  # 枚举前三个记录
-                src, text = await self.get_pic_info(ele.xpath(r".//tr[1]")[0])
+                src, text = await self.get_table_info(ele.xpath(r".//tr[1]")[0])
 
-                def check_src_exists(_src):
+                async def check_src_exists(_src):
                     try:
-                        req = urllib.request.Request(_src, method='HEAD', headers=self.headers)
-                        with urllib.request.urlopen(req) as response:
-                            return response.status
-                    except urllib.error.HTTPError as e:
-                        return e.code
-                    except urllib.error.URLError:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.head(_src, headers=self.headers) as response:
+                                return response.status
+                    except aiohttp.ClientError:
                         return None
 
                 if src is None:
                     content.extend([Plain(text), Plain("\n"), Plain(f"该图片src不存在"), Plain("\n\n")])
                     continue
-                exit_code = check_src_exists(src)
+                exit_code = await check_src_exists(src)
                 if exit_code == 200:
                     content.extend([Plain(text), Plain("\n"), Image.fromURL(src), Plain("\n\n")])
                 else:
