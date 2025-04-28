@@ -15,7 +15,7 @@ import aiohttp
     "astrbot_plugin_search_pic",
     "lyjlyjlyjly",
     r"从 https://saucenao.com/ 搜索图片",
-    "v1.1.1",
+    "v1.1.2",
     "https://github.com/lyjlyjlyjly/astrbot_plugin_search_pic"
 )
 class Main(Star):
@@ -25,48 +25,6 @@ class Main(Star):
             'User-Agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
         }
         self.upload_url = r'https://saucenao.com/search.php'
-        self.source_db = r"""从 https://saucenao.com/ 搜索图片，功能是以图搜图
-
-搜索范围如下：
-1. H-Magazines
-2. H-Game CG
-3. DoujinshiDB
-4. pixiv Images
-5. Nico Nico Seiga
-6. Danbooru
-7. drawr Images
-8. Nijie Images
-9. Yande.re
-10. Shutterstock
-11. FAKKU
-12. H-Misc (nH)
-13. 2D-Market
-14. MediBang
-15. Anime
-16. H-Anime
-17. Movies
-18. Shows
-19. Gelbooru
-20. Konachan
-21. Sankaku Channel
-22. Anime-Pictures.net
-23. e621.net
-24. Idol Complex
-25. bcy.net Illust
-26. bcy.net Cosplay
-27. PortalGraphics.net
-28. deviantArt
-29. Pawoo.net
-30. Madokami (Manga)
-31. MangaDex
-32. H-Misc (eH)
-33. ArtStation
-34. FurAffinity
-35. Twitter
-36. Furry Network
-37. Kemono
-38. Skeb
-        """
 
     async def get_table_info(self, tree) -> list:
         result_image_src = None
@@ -182,23 +140,66 @@ class Main(Star):
 
                 if src is None:
                     content.extend([Plain(text), Plain("\n"), Plain(f"该图片src不存在"), Plain("\n\n")])
-                    continue
-                exit_code = await check_src_exists(src)
-                if exit_code == 200:
-                    content.extend([Plain(text), Plain("\n"), Image.fromURL(src), Plain("\n\n")])
                 else:
-                    content.extend([Plain(text), Plain("\n"), Plain(f"该图片资源不存在，状态码: {exit_code}"), Plain("\n\n")])
+                    exit_code = await check_src_exists(src)
+                    if exit_code == 200:
+                        content.extend([Plain(text), Plain("\n"), Image.fromURL(src), Plain("\n\n")])
+                    elif exit_code is not None:
+                        content.extend([Plain(text), Plain("\n"), Plain(f"该图片资源不存在，状态码: {exit_code}"), Plain("\n\n")])
+                    else:
+                        content.extend([Plain(text), Plain("\n"), Plain(f"该图片资源不存在，访问出错"), Plain("\n\n")])
 
             yield message.chain_result([Node(
                 uin=message.get_self_id(),
                 content=content
             )])
         except Exception as e:
-            raise e
+            yield message.plain_result(f"搜图过程中出现异常: {e}")
 
     @filter.command("搜图来源")
     async def print_query_range(self, message: AstrMessageEvent):
-        text = self.source_db
+        text = r"""从 https://saucenao.com/ 搜索图片，功能是以图搜图
+
+搜索范围如下：
+1. H-Magazines
+2. H-Game CG
+3. DoujinshiDB
+4. pixiv Images
+5. Nico Nico Seiga
+6. Danbooru
+7. drawr Images
+8. Nijie Images
+9. Yande.re
+10. Shutterstock
+11. FAKKU
+12. H-Misc (nH)
+13. 2D-Market
+14. MediBang
+15. Anime
+16. H-Anime
+17. Movies
+18. Shows
+19. Gelbooru
+20. Konachan
+21. Sankaku Channel
+22. Anime-Pictures.net
+23. e621.net
+24. Idol Complex
+25. bcy.net Illust
+26. bcy.net Cosplay
+27. PortalGraphics.net
+28. deviantArt
+29. Pawoo.net
+30. Madokami (Manga)
+31. MangaDex
+32. H-Misc (eH)
+33. ArtStation
+34. FurAffinity
+35. Twitter
+36. Furry Network
+37. Kemono
+38. Skeb
+        """
         # 发送纯文本就用上面的，发送转发消息就用下面的
         # yield message.plain_result(text)
         yield message.chain_result([Node(
@@ -210,21 +211,18 @@ class Main(Star):
 
     @filter.command("搜图帮助")
     async def print_help(self, message: AstrMessageEvent):
-        help_text = r"""插件 astrbot_plugin_search_pic 帮助信息：
-
-作者: lyjlyjlyjly
-版本: v1.0.0
-
+        help_text = r"""
 指令列表：
-- 搜图
-    别名 “soutu”
-    发出消息后在 30s 内发送图片进行搜图
-    搜索结果仅供参考，有概率出现网站上存在但是搜不到的问题
-    由于QQ有审查机制，R18的图在群里可能发不出来，所以搜R18建议私聊
-    图片不要旋转
-- 搜图来源
+- 搜图  
+    别名 “soutu”  
+    将图片附在命令后即可搜图  
+    手机端新版QQ长按输入框可以选择“全屏输入”，就可以将图片和文本一起发送  
+    搜索结果仅供参考，有概率出现网站上存在但是搜不到的问题  
+    由于QQ有审查机制，R18的图在群里可能发不出来，所以搜R18建议私聊  
+    图片不要旋转  
+- 搜图来源  
     查询搜索范围
-- 搜图帮助
+- 搜图帮助  
     获取帮助信息
 
 如果是在群聊消息，需要在前面加上astrbot的唤醒前缀

@@ -6,7 +6,7 @@ astrbot插件，目前仅支持 aiocqhttp 平台
 从 https://saucenao.com/ 搜索图片，功能是以图搜图
 
 作者: lyjlyjlyjly  
-版本: v1.1.1
+版本: v1.1.2
 
 
 ## 指令列表：
